@@ -1,51 +1,56 @@
-projects := "gated gated-admin gated-ca gated-common gated-core gated-database-protocols gated-db-entities gated-db-migrations gated-ldap gated-protocol-api gated-protocol-http gated-protocol-kubernetes gated-protocol-mysql gated-protocol-postgres gated-protocol-ssh gated-sso gated-tls gated-web"
+set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
-run $RUST_BACKTRACE='1' *ARGS='run':
-     cargo run --all-features -- --config config.yaml {{ARGS}}
+workspace_packages := "gated gated-admin gated-ca gated-common gated-core gated-database-protocols gated-db-entities gated-db-migrations gated-ldap gated-protocol-api gated-protocol-http gated-protocol-kubernetes gated-protocol-mysql gated-protocol-postgres gated-protocol-ssh gated-sso gated-tls gated-web"
+web_dir := "web"
+config_path := "config.yaml"
+cargo_target := env_var_or_default("CARGO_BUILD_TARGET", "x86_64-unknown-linux-gnu")
+
+run $RUST_BACKTRACE='1' *ARGS:
+    CARGO_BUILD_TARGET={{cargo_target}} cargo run --target {{cargo_target}} --all-features -- --config {{config_path}} run {{ARGS}}
 
 fmt:
-    for p in {{projects}}; do cargo fmt -p $p -v; done
+    cargo fmt --all --verbose
 
 fix *ARGS:
-    for p in {{projects}}; do cargo fix --all-features -p $p {{ARGS}}; done
+    for p in {{workspace_packages}}; do CARGO_BUILD_TARGET={{cargo_target}} cargo fix --target {{cargo_target}} --all-features -p "$p" {{ARGS}}; done
 
 clippy *ARGS:
-    for p in {{projects}}; do cargo cranky --all-features -p $p {{ARGS}}; done
+    for p in {{workspace_packages}}; do CARGO_BUILD_TARGET={{cargo_target}} cargo cranky --target {{cargo_target}} --all-features -p "$p" {{ARGS}}; done
 
-test:
-    for p in {{projects}}; do cargo test --all-features -p $p; done
+test *ARGS:
+    CARGO_BUILD_TARGET={{cargo_target}} cargo test --target {{cargo_target}} --workspace --all-features {{ARGS}}
 
 bun *ARGS:
-    cd web && bun {{ARGS}}
+    cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun {{ARGS}}
 
 bunx *ARGS:
-    cd web && bunx {{ARGS}}
+    cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bunx {{ARGS}}
 
 migrate *ARGS:
-    cargo run --all-features -p gated-db-migrations -- {{ARGS}}
+    CARGO_BUILD_TARGET={{cargo_target}} cargo run --target {{cargo_target}} --all-features -p gated-db-migrations -- {{ARGS}}
 
 lint *ARGS:
-    cd web && bun run lint {{ARGS}}
+    cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run lint {{ARGS}}
 
 typecheck:
-    cd web && bun run typecheck
+    cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run typecheck
 
-test-web:
-    cd web && bun run test
+test-web *ARGS:
+    cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run test {{ARGS}}
 
 i18n-check:
-    cd web && bun run i18n-check
+    cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run i18n-check
 
 openapi-all:
-    cd web && bun run openapi:schema:admin && bun run openapi:schema:gateway && bun run openapi:client:admin && bun run openapi:client:gateway
+    cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run openapi:schema:admin && CARGO_BUILD_TARGET={{cargo_target}} bun run openapi:schema:gateway && CARGO_BUILD_TARGET={{cargo_target}} bun run openapi:client:admin && CARGO_BUILD_TARGET={{cargo_target}} bun run openapi:client:gateway
 
 openapi:
-    cd web && bun run openapi:client:admin && bun run openapi:client:gateway
+    cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run openapi:client:admin && CARGO_BUILD_TARGET={{cargo_target}} bun run openapi:client:gateway
 
 config-schema:
-    cargo run -p gated-common --bin config-schema > config-schema.json
+    CARGO_BUILD_TARGET={{cargo_target}} cargo run --target {{cargo_target}} -p gated-common --bin config-schema > config-schema.json
 
 cleanup: (fix "--allow-dirty") (clippy "--fix" "--allow-dirty") fmt typecheck lint i18n-check test-web
 
 udeps:
-    cargo udeps --all-features --all-targets
+    CARGO_BUILD_TARGET={{cargo_target}} cargo udeps --target {{cargo_target}} --all-features --all-targets

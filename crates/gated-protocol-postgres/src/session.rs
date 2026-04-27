@@ -1,15 +1,13 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::Instant;
 use std::time::Duration;
+use std::time::Instant;
 
 use gated_common::auth::{
     AuthCredential, AuthResult, AuthSelector, AuthStateUserInfo, CredentialKind,
 };
 use gated_common::{Secret, TargetOptions, TargetPostgresOptions};
-use gated_core::recordings::{
-    SqlAuditRecordingItem, SqlAuditSessionMetadata, StructuredRecorder,
-};
+use gated_core::recordings::{SqlAuditRecordingItem, SqlAuditSessionMetadata, StructuredRecorder};
 use gated_core::{authorize_ticket, consume_ticket, ConfigProvider, GatedServerHandle, Services};
 use pgwire::error::ErrorInfo;
 use pgwire::messages::{PgWireBackendMessage, PgWireFrontendMessage};

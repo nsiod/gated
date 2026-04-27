@@ -720,7 +720,10 @@ pub struct GatedConfig {
 impl GatedConfig {
     pub fn external_host_from_config(&self) -> Option<(Scheme, String, Option<u16>)> {
         if let Some(external_host) = self.store.external_host.as_ref() {
-            #[allow(clippy::unwrap_used, reason = "str::split always yields at least one element")]
+            #[allow(
+                clippy::unwrap_used,
+                reason = "str::split always yields at least one element"
+            )]
             let external_host = external_host.split(":").next().unwrap();
 
             let scheme = if self.store.http.tls {

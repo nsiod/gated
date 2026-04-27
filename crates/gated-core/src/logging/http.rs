@@ -19,7 +19,10 @@ pub async fn get_client_ip(req: &Request, services: Option<&Services>) -> Option
     let socket_addr = match req.remote_addr() {
         // See [CertificateExtractorEndpoint]
         RemoteAddr(Addr::Custom("captured-cert", value)) => {
-            #[allow(clippy::unwrap_used, reason = "str::split always yields at least one element")]
+            #[allow(
+                clippy::unwrap_used,
+                reason = "str::split always yields at least one element"
+            )]
             let original_remote_addr = value.split("|").next().unwrap();
             original_remote_addr
                 .to_socket_addrs()

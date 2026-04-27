@@ -65,8 +65,7 @@ impl Services {
 
         let config = Arc::new(RwLock::new(config));
 
-        let config_provider =
-            Arc::new(Mutex::new(DatabaseConfigProvider::new(&db).await.into()));
+        let config_provider = Arc::new(Mutex::new(DatabaseConfigProvider::new(&db).await.into()));
 
         let auth_state_store = Arc::new(Mutex::new(AuthStateStore::new(config_provider.clone())));
 

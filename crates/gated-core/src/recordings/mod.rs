@@ -9,15 +9,15 @@ use gated_common::{GatedConfig, GlobalParams, RecordingsConfig, SessionId};
 use gated_db_entities::Recording::{self, RecordingKind};
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use serde::Serialize;
-use tokio::sync::{Mutex, RwLock, broadcast};
+use tokio::sync::{broadcast, Mutex, RwLock};
 use tracing::*;
 use uuid::Uuid;
-mod terminal;
 mod structured;
+mod terminal;
 mod traffic;
 mod writer;
-pub use terminal::*;
 pub use structured::*;
+pub use terminal::*;
 pub use traffic::*;
 pub use writer::RecordingWriter;
 

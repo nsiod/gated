@@ -158,7 +158,10 @@ impl dyn DatabaseError {
     #[inline]
     pub fn try_downcast<E: DatabaseError>(self: Box<Self>) -> StdResult<Box<E>, Box<Self>> {
         if self.as_error().is::<E>() {
-            #[allow(clippy::unwrap_used, reason = "is::<E>() guard above guarantees downcast succeeds")]
+            #[allow(
+                clippy::unwrap_used,
+                reason = "is::<E>() guard above guarantees downcast succeeds"
+            )]
             Ok(self.into_error().downcast().unwrap())
         } else {
             Err(self)

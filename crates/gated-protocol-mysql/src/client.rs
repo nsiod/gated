@@ -178,10 +178,7 @@ impl MySqlClient {
                     }
                     let reply = build_auth_response(current_plugin, &current_nonce, &password)?
                         .unwrap_or_default();
-                    stream.push(
-                        &AuthSwitchResponse(reply),
-                        options.capabilities,
-                    )?;
+                    stream.push(&AuthSwitchResponse(reply), options.capabilities)?;
                     stream.flush().await?;
                 }
                 Some(&0x01) => {
@@ -230,8 +227,8 @@ fn build_auth_response(
                 .ok_or_else(|| MySqlError::ProtocolError("nonce too short".into()))?
                 .try_into()
                 .map_err(|_| MySqlError::ProtocolError("nonce not 20 bytes".into()))?;
-            let out = compute_auth_challenge_response(scramble, password)
-                .map_err(MySqlError::other)?;
+            let out =
+                compute_auth_challenge_response(scramble, password).map_err(MySqlError::other)?;
             Ok(Some(out.as_bytes().to_vec()))
         }
         Some(AuthPlugin::CachingSha2Password) => {
@@ -243,7 +240,9 @@ fn build_auth_response(
                 .ok_or_else(|| MySqlError::ProtocolError("nonce too short".into()))?
                 .try_into()
                 .map_err(|_| MySqlError::ProtocolError("nonce not 20 bytes".into()))?;
-            Ok(Some(compute_caching_sha2_response(&scramble, password).to_vec()))
+            Ok(Some(
+                compute_caching_sha2_response(&scramble, password).to_vec(),
+            ))
         }
         Some(AuthPlugin::MySqlClearPassword) => {
             let mut out = password.as_bytes().to_vec();

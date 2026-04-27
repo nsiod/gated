@@ -9,9 +9,7 @@ use gated_common::auth::{
 };
 use gated_common::helpers::rng::get_crypto_rng;
 use gated_common::{Secret, TargetMySqlOptions, TargetOptions};
-use gated_core::recordings::{
-    SqlAuditRecordingItem, SqlAuditSessionMetadata, StructuredRecorder,
-};
+use gated_core::recordings::{SqlAuditRecordingItem, SqlAuditSessionMetadata, StructuredRecorder};
 use gated_core::{authorize_ticket, consume_ticket, ConfigProvider, GatedServerHandle, Services};
 use gated_database_protocols::io::{BufExt, Decode};
 use gated_database_protocols::mysql::protocol::auth::AuthPlugin;
@@ -452,7 +450,11 @@ impl<S: AsyncRead + AsyncWrite + Send + Unpin> MySqlSession<S> {
                 };
                 let mut recordings = self.services.recordings.lock().await;
                 match recordings
-                    .start::<StructuredRecorder, _>(&self.id, Some("sql-proxy".to_string()), metadata)
+                    .start::<StructuredRecorder, _>(
+                        &self.id,
+                        Some("sql-proxy".to_string()),
+                        metadata,
+                    )
                     .await
                 {
                     Ok(mut recorder) => {

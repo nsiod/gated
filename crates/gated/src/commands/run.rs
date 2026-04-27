@@ -154,7 +154,10 @@ pub(crate) async fn command(params: &GlobalParams, enable_admin_token: bool) -> 
         match gated_core::metrics::install_recorder() {
             Ok(h) => Some(h),
             Err(e) => {
-                error!(?e, "Failed to install Prometheus recorder; metrics disabled");
+                error!(
+                    ?e,
+                    "Failed to install Prometheus recorder; metrics disabled"
+                );
                 None
             }
         }

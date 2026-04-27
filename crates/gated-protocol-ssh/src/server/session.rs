@@ -243,7 +243,10 @@ impl ServerSession {
     }
 
     async fn get_auth_state(&mut self, username: &str) -> Result<Arc<Mutex<AuthState>>> {
-        #[allow(clippy::unwrap_used, reason = "as_ref().unwrap() is guarded by is_none() check on the same Option")]
+        #[allow(
+            clippy::unwrap_used,
+            reason = "as_ref().unwrap() is guarded by is_none() check on the same Option"
+        )]
         if self.auth_state.is_none()
             || self
                 .auth_state
@@ -275,7 +278,10 @@ impl ServerSession {
                 .1;
             self.auth_state = Some(state);
         }
-        #[allow(clippy::unwrap_used, reason = "the if-block above ensures auth_state is Some")]
+        #[allow(
+            clippy::unwrap_used,
+            reason = "the if-block above ensures auth_state is Some"
+        )]
         Ok(self.auth_state.as_ref().cloned().unwrap())
     }
 
@@ -875,7 +881,10 @@ impl ServerSession {
                         )
                         .await;
                     if let Some(recorder) = recorder {
-                        #[allow(clippy::unwrap_used, reason = "static Ipv4Addr literal is known-valid")]
+                        #[allow(
+                            clippy::unwrap_used,
+                            reason = "static Ipv4Addr literal is known-valid"
+                        )]
                         let mut recorder = recorder.connection(TrafficConnectionParams::Tcp {
                             dst_addr: Ipv4Addr::from_str("2.2.2.2").unwrap(),
                             dst_port: params.connected_port as u16,
@@ -908,7 +917,10 @@ impl ServerSession {
                         )
                         .await;
                     if let Some(recorder) = recorder {
-                        #[allow(clippy::unwrap_used, reason = "static Ipv4Addr literal is known-valid")]
+                        #[allow(
+                            clippy::unwrap_used,
+                            reason = "static Ipv4Addr literal is known-valid"
+                        )]
                         let mut recorder = recorder.connection(TrafficConnectionParams::Socket {
                             socket_path: params.socket_path,
                         });

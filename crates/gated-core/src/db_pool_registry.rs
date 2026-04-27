@@ -256,7 +256,7 @@ fn record_pool_metrics(target_name: &str, pool: &TargetPool) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gated_common::{Tls, TargetMySqlOptions, TargetOptions, TargetPostgresOptions};
+    use gated_common::{TargetMySqlOptions, TargetOptions, TargetPostgresOptions, Tls};
     use gated_tls::TlsMode;
 
     fn mysql_target(id: Uuid, name: &str, port: u16) -> Target {

@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 use gated_common::auth::{AuthResult, AuthState, CredentialKind};
 use gated_common::{GatedError, SessionId};
 use once_cell::sync::Lazy;
-use tokio::sync::{Mutex, broadcast};
+use tokio::sync::{broadcast, Mutex};
 use uuid::Uuid;
 
 use crate::{ConfigProvider, ConfigProviderEnum};

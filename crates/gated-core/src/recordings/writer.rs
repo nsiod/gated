@@ -10,7 +10,7 @@ use gated_db_entities::Recording;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait};
 use tokio::fs::File;
 use tokio::io::{AsyncWriteExt, BufWriter};
-use tokio::sync::{Mutex, RwLock, broadcast, mpsc};
+use tokio::sync::{broadcast, mpsc, Mutex, RwLock};
 use tracing::*;
 use uuid::Uuid;
 

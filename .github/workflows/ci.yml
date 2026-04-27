@@ -1,4 +1,4 @@
-name: Test
+name: CI
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
     paths:
       - 'Cargo.toml'
       - 'Cargo.lock'
-      - '.github/workflows/test.yml'
+      - '.github/workflows/ci.yml'
       - 'crates/**/src/**'
       - 'crates/**/Cargo.toml'
       - 'web/**'

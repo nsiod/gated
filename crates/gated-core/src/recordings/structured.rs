@@ -9,10 +9,7 @@ use super::{Error, Recorder, Result};
 #[serde(tag = "type")]
 pub enum SqlAuditSessionMetadata {
     #[serde(rename = "sql-console-session")]
-    SqlConsoleSession {
-        target_kind: String,
-        target: String,
-    },
+    SqlConsoleSession { target_kind: String, target: String },
     #[serde(rename = "mysql-proxy-session")]
     MySqlProxySession {
         target: String,

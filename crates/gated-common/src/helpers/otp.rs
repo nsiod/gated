@@ -31,7 +31,10 @@ fn get_totp(key: &OtpSecretKey, label: Option<&str>) -> TOTP {
 }
 
 pub fn verify_totp(code: &str, key: &OtpSecretKey) -> bool {
-    #[allow(clippy::unwrap_used, reason = "SystemTime::now is always >= UNIX_EPOCH on a sane clock")]
+    #[allow(
+        clippy::unwrap_used,
+        reason = "SystemTime::now is always >= UNIX_EPOCH on a sane clock"
+    )]
     let time = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap()

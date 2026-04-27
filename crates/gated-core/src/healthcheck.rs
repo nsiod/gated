@@ -84,8 +84,11 @@ pub async fn deep_check(
     paths_relative_to: &Path,
     opts: DeepHealthOptions,
 ) -> DeepHealthReport {
-    let (ping, migrations, tx_rt) =
-        tokio::join!(check_db_ping(db), check_db_migrations(db), check_db_tx_roundtrip(db));
+    let (ping, migrations, tx_rt) = tokio::join!(
+        check_db_ping(db),
+        check_db_migrations(db),
+        check_db_tx_roundtrip(db)
+    );
 
     let mut checks = vec![ping, migrations, tx_rt];
     checks.push(check_tls_cert(config, paths_relative_to));
@@ -128,16 +131,21 @@ async fn check_db_migrations(db: &DatabaseConnection) -> DeepHealthCheck {
             if pending.is_empty() {
                 ok("db.migrations")
             } else {
-                let names: Vec<String> =
-                    pending.iter().map(|m| m.name().to_owned()).collect();
+                let names: Vec<String> = pending.iter().map(|m| m.name().to_owned()).collect();
                 fail(
                     "db.migrations",
                     format!("{} pending migration(s): {}", names.len(), names.join(", ")),
                 )
             }
         }
-        Ok(Err(e)) => fail("db.migrations", format!("migration status query failed: {e}")),
-        Err(_) => fail("db.migrations", "migration status query timed out after 700ms"),
+        Ok(Err(e)) => fail(
+            "db.migrations",
+            format!("migration status query failed: {e}"),
+        ),
+        Err(_) => fail(
+            "db.migrations",
+            "migration status query timed out after 700ms",
+        ),
     }
 }
 
@@ -201,13 +209,10 @@ fn check_tls_cert(config: &GatedConfig, paths_relative_to: &Path) -> DeepHealthC
 
     let now = Utc::now();
     let not_after = parsed.validity().not_after.timestamp();
-    let not_after = DateTime::<Utc>::from_timestamp(not_after, 0)
-        .unwrap_or(now - chrono::Duration::seconds(1));
+    let not_after =
+        DateTime::<Utc>::from_timestamp(not_after, 0).unwrap_or(now - chrono::Duration::seconds(1));
     if not_after <= now {
-        return fail(
-            "tls.cert",
-            format!("expired at {}", not_after.to_rfc3339()),
-        );
+        return fail("tls.cert", format!("expired at {}", not_after.to_rfc3339()));
     }
     let days_left = (not_after - now).num_days();
     if days_left < TLS_WARN_DAYS {

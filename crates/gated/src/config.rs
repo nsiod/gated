@@ -5,7 +5,7 @@ use config::{Config, Environment, File, FileFormat};
 use gated_common::helpers::fs::secure_file;
 use gated_common::{GatedConfig, GatedConfigStore, GlobalParams};
 use notify::{recommended_watcher, RecursiveMode, Watcher};
-use tokio::sync::{RwLock, broadcast, mpsc};
+use tokio::sync::{broadcast, mpsc, RwLock};
 use tracing::*;
 
 pub fn load_config(params: &GlobalParams, secure: bool) -> Result<GatedConfig> {

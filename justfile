@@ -16,31 +16,31 @@ test:
     for p in {{projects}}; do cargo test --all-features -p $p; done
 
 bun *ARGS:
-    cd crates/gated-web && bun {{ARGS}}
+    cd web && bun {{ARGS}}
 
 bunx *ARGS:
-    cd crates/gated-web && bunx {{ARGS}}
+    cd web && bunx {{ARGS}}
 
 migrate *ARGS:
     cargo run --all-features -p gated-db-migrations -- {{ARGS}}
 
 lint *ARGS:
-    cd crates/gated-web && bun run lint {{ARGS}}
+    cd web && bun run lint {{ARGS}}
 
 typecheck:
-    cd crates/gated-web && bun run typecheck
+    cd web && bun run typecheck
 
 test-web:
-    cd crates/gated-web && bun run test
+    cd web && bun run test
 
 i18n-check:
-    cd crates/gated-web && bun run i18n-check
+    cd web && bun run i18n-check
 
 openapi-all:
-    cd crates/gated-web && bun run openapi:schema:admin && bun run openapi:schema:gateway && bun run openapi:client:admin && bun run openapi:client:gateway
+    cd web && bun run openapi:schema:admin && bun run openapi:schema:gateway && bun run openapi:client:admin && bun run openapi:client:gateway
 
 openapi:
-    cd crates/gated-web && bun run openapi:client:admin && bun run openapi:client:gateway
+    cd web && bun run openapi:client:admin && bun run openapi:client:gateway
 
 config-schema:
     cargo run -p gated-common --bin config-schema > config-schema.json

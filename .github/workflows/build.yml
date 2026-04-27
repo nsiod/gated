@@ -100,8 +100,8 @@ jobs:
 
       - name: Generate UI BOM
         run: |
-          cd crates/gated-web && cdxgen -t bun -o ../../cdx/admin-ui.cdx.json --spec-version 1.5
-          cd ../..
+          cd web && cdxgen -t bun -o ../cdx/admin-ui.cdx.json --spec-version 1.5
+          cd ..
           ./cyclonedx convert --input-file cdx/admin-ui.cdx.json --output-file cdx/admin-ui.cdx.xml --input-format json --output-format xml
           rm cdx/admin-ui.cdx.json
 
@@ -193,6 +193,6 @@ jobs:
 
       - name: Ensure there are no changes in config schema
         run: |
-          mkdir crates/gated-web/dist
+          mkdir -p web/dist
           just config-schema
           git diff --exit-code config-schema.json

@@ -1,5 +1,5 @@
 use rust_embed::RustEmbed;
 
 #[derive(RustEmbed)]
-#[folder = "../gated-web/dist"]
+#[folder = "../../web/dist"]
 pub struct Assets;

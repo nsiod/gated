@@ -10,7 +10,7 @@ on:
       - '.github/workflows/test.yml'
       - 'crates/**/src/**'
       - 'crates/**/Cargo.toml'
-      - 'crates/gated-web/**'
+      - 'web/**'
       - 'tests/**'
 
 permissions:
@@ -42,7 +42,7 @@ jobs:
           sudo apt-get install -y libssl-dev pkg-config
 
       - name: Create dist directory
-        run: mkdir -p crates/gated-web/dist
+        run: mkdir -p web/dist
 
       - name: Run tests
         run: cargo test --all-features
@@ -129,7 +129,7 @@ jobs:
           command -v cargo-deny || cargo install --locked cargo-deny
 
       - name: Create dist directory
-        run: mkdir -p crates/gated-web/dist
+        run: mkdir -p web/dist
 
       - name: Clippy (cargo-cranky, all crates, all features)
         run: just clippy
@@ -141,13 +141,13 @@ jobs:
         run: cargo deny check advisories bans sources licenses
 
       - name: Install frontend deps
-        run: cd crates/gated-web && bun install --frozen-lockfile
+        run: cd web && bun install --frozen-lockfile
 
       - name: Frontend unit tests (Vitest)
-        run: cd crates/gated-web && bun run test
+        run: cd web && bun run test
 
       - name: Frontend i18n key parity
-        run: cd crates/gated-web && bun run i18n-check
+        run: cd web && bun run i18n-check
 
   integration:
     name: Integration tests
@@ -230,11 +230,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd crates/gated-web && bun install --frozen-lockfile
+          cd web && bun install --frozen-lockfile
 
       - name: Generate API schema files
         run: |
-          mkdir crates/gated-web/dist
+          mkdir -p web/dist
           just openapi-all
 
       - name: Checkout main branch to compare
@@ -246,14 +246,14 @@ jobs:
       - name: Regenerate main branch schema
         run: |
           cd main-branch
-          mkdir -p crates/gated-web/dist
-          cd crates/gated-web && bun install --frozen-lockfile
+          mkdir -p web/dist
+          cd web && bun install --frozen-lockfile
           cd ../.. && just openapi-all
 
       - name: Check admin API
         run: |
-          docker run --rm -t -v $(pwd):/specs:ro tufin/oasdiff breaking -f githubactions --fail-on WARN /specs/main-branch/crates/gated-web/src/features/admin/lib/openapi-schema.json /specs/crates/gated-web/src/features/admin/lib/openapi-schema.json
+          docker run --rm -t -v $(pwd):/specs:ro tufin/oasdiff breaking -f githubactions --fail-on WARN /specs/main-branch/web/src/features/admin/lib/openapi-schema.json /specs/web/src/features/admin/lib/openapi-schema.json
 
       - name: Check gateway API
         run: |
-          docker run --rm -t -v $(pwd):/specs:ro tufin/oasdiff breaking -f githubactions --fail-on WARN /specs/main-branch/crates/gated-web/src/features/gateway/lib/openapi-schema.json /specs/crates/gated-web/src/features/gateway/lib/openapi-schema.json
+          docker run --rm -t -v $(pwd):/specs:ro tufin/oasdiff breaking -f githubactions --fail-on WARN /specs/main-branch/web/src/features/gateway/lib/openapi-schema.json /specs/web/src/features/gateway/lib/openapi-schema.json

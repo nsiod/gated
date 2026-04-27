@@ -1,0 +1,187 @@
+{
+  "pages": {
+    "login": "Login",
+    "otp": "Two-Factor Authentication",
+    "profile": "Profile",
+    "credentials": "Credentials",
+    "apiTokens": "API Tokens",
+    "tickets": "Access Tickets",
+    "targetList": "Targets",
+    "terminal": "Terminal: {{targetName}}"
+  },
+  "nav": {
+    "targets": "Targets",
+    "allTargets": "All Targets",
+    "terminals": "Terminals",
+    "profile": "Profile",
+    "logout": "Log out",
+    "logoutError": "Failed to log out, please try again"
+  },
+  "login": {
+    "description": "Sign in to Gated",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "ssoSection": "Or sign in with SSO",
+    "loginWith": "Sign in with {{name}}",
+    "errors": {
+      "invalid": "Invalid username or password",
+      "failed": "Login failed, please try again",
+      "ssoFailed": "SSO login failed, please try again"
+    }
+  },
+  "otp": {
+    "title": "Two-Factor Authentication",
+    "description": "Enter the code from your authenticator app",
+    "code": "Verification code",
+    "submit": "Verify",
+    "back": "Back to login",
+    "errors": {
+      "invalid": "Invalid code, please try again",
+      "failed": "Verification failed, please try again"
+    }
+  },
+  "targetList": {
+    "search": "Search targets...",
+    "empty": "No targets available",
+    "copyCommand": "Copy connection command",
+    "openTerminal": "Open Terminal",
+    "openSqlConsole": "Open SQL Console",
+    "colName": "Name",
+    "colType": "Type",
+    "colDescription": "Description",
+    "colGroup": "Group",
+    "colActions": "Actions"
+  },
+  "sqlConsole": {
+    "schemas": "Schemas",
+    "schemaLoadError": "Failed to load schemas",
+    "run": "Run",
+    "running": "Running…",
+    "shortcut": "Ctrl/Cmd+Enter to run",
+    "limit": "Limit",
+    "results": "Results",
+    "history": "History",
+    "historyEmpty": "No query history yet.",
+    "clearHistory": "Clear history",
+    "readonly": "Read-only",
+    "truncated": "Result truncated",
+    "close": "Close",
+    "runPrompt": "Write a query and press Run (or Ctrl/Cmd+Enter)."
+  },
+  "profile": {
+    "loggedInAs": "Logged in as {{username}}",
+    "securitySection": "Security",
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Update your account password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Update password",
+      "success": "Password updated successfully",
+      "error": "Failed to update password",
+      "errors": {
+        "mismatch": "Passwords do not match"
+      }
+    }
+  },
+  "credentials": {
+    "label": "Label",
+    "addedOn": "Added {{date}}",
+    "publicKeys": {
+      "tab": "Public Keys",
+      "addTitle": "Add Public Key",
+      "publicKey": "Public key (OpenSSH format)",
+      "empty": "No public keys added",
+      "addSuccess": "Public key added",
+      "addError": "Failed to add public key",
+      "deleteSuccess": "Public key removed",
+      "deleteError": "Failed to remove public key"
+    },
+    "otp": {
+      "tab": "OTP / TOTP",
+      "addTitle": "Add Authenticator",
+      "addDescription": "A new secret key will be generated. Scan the provisioning URI with your authenticator app.",
+      "addedInfo": "Authenticator added. Copy the provisioning URI and scan it with your app.",
+      "scanOnce": "This URI is only shown once. Make sure you save it.",
+      "item": "Authenticator #{{index}}",
+      "empty": "No OTP devices added",
+      "addError": "Failed to add OTP device",
+      "deleteSuccess": "OTP device removed",
+      "deleteError": "Failed to remove OTP device"
+    },
+    "certificates": {
+      "tab": "Certificates",
+      "empty": "No certificates issued"
+    }
+  },
+  "apiTokens": {
+    "createTitle": "Create API Token",
+    "listTitle": "Your API Tokens",
+    "label": "Token name",
+    "labelPlaceholder": "e.g. CI/CD pipeline",
+    "expiryDays": "Expiry (days)",
+    "create": "Create token",
+    "created": "Created {{date}}",
+    "expires": "Expires {{date}}",
+    "empty": "No API tokens created",
+    "secretWarning": "Copy this token now — it will not be shown again.",
+    "createError": "Failed to create token",
+    "deleteSuccess": "Token deleted",
+    "deleteError": "Failed to delete token"
+  },
+  "tickets": {
+    "createTitle": "Create Access Ticket",
+    "createDescription": "Issue a single- or limited-use credential for one of your authorised targets. The secret is shown only once.",
+    "listTitle": "Your Access Tickets",
+    "target": "Target",
+    "selectTarget": "Select a target",
+    "expiryDays": "Expiry (days)",
+    "expiryDaysHint": "0 = never expires (1–365).",
+    "numberOfUses": "Number of uses",
+    "numberOfUsesHint": "0 = unlimited; 1 makes it a single-use ticket.",
+    "description": "Description",
+    "descriptionPlaceholder": "Where/why this ticket is used",
+    "create": "Create ticket",
+    "created": "Created {{date}}",
+    "expires": "Expires {{date}}",
+    "noExpiry": "No expiry",
+    "usesLeft": "{{count}} use(s) left",
+    "usesLeftLabel": "Uses left:",
+    "unlimitedUses": "Unlimited uses",
+    "empty": "No access tickets issued",
+    "secretWarning": "Copy this secret now — it will not be shown again.",
+    "createError": "Failed to create ticket (target may not be authorised for you)",
+    "deleteSuccess": "Ticket revoked",
+    "deleteError": "Failed to revoke ticket"
+  },
+  "terminal": {
+    "status": {
+      "connecting": "Connecting...",
+      "connected": "Connected",
+      "disconnected": "Disconnected"
+    },
+    "reconnect": "Reconnect",
+    "close": "Close",
+    "hostKey": {
+      "title": "Verify target host key",
+      "description": "This target has not been connected before. Accept the host key to continue, or reject to abort.",
+      "algorithm": "Algorithm:",
+      "key": "Key:",
+      "accept": "Trust host",
+      "reject": "Reject"
+    }
+  },
+  "client": {
+    "newTab": "New terminal tab",
+    "noTabs": "No terminal sessions open",
+    "selectServer": "Select a server from the sidebar to connect",
+    "connect": "Connect",
+    "newConnection": "New connection",
+    "openSqlConsole": "Open SQL Console",
+    "openCliTerminal": "Open Terminal (CLI)",
+    "backToHome": "Back to home",
+    "myAssets": "My Assets",
+    "searchPlaceholder": "Search assets..."
+  }
+}

@@ -1,0 +1,48 @@
+import { Loader2 } from 'lucide-react'
+import { Navigate, Outlet, useLocation } from 'react-router'
+import { useAuthInit } from '@/shared/hooks/use-auth-init'
+import { useAuthStore } from '@/shared/stores/auth'
+
+export function RequireAuth() {
+  useAuthInit()
+  const { isAuthenticated, initialized } = useAuthStore()
+  const location = useLocation()
+
+  if (!initialized) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/ui/login" state={{ from: location }} replace />
+  }
+
+  return <Outlet />
+}
+
+export function RequireAdmin() {
+  useAuthInit()
+  const { isAuthenticated, isAdmin, initialized } = useAuthStore()
+  const location = useLocation()
+
+  if (!initialized) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/ui/login" state={{ from: location }} replace />
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/ui" replace />
+  }
+
+  return <Outlet />
+}

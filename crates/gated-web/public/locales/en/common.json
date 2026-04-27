@@ -1,0 +1,88 @@
+{
+  "appName": "Gated",
+  "adminTitle": "Gated Admin",
+  "nav": {
+    "monitoring": "Monitoring",
+    "configuration": "Configuration",
+    "security": "Security",
+    "system": "System"
+  },
+  "user": {
+    "profile": "Profile",
+    "adminPanel": "Admin Panel",
+    "logout": "Log out",
+    "logoutError": "Failed to log out, please try again"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Toggle theme"
+  },
+  "language": {
+    "toggle": "Switch language",
+    "zh-CN": "Chinese (Simplified)",
+    "en": "English"
+  },
+  "actions": {
+    "add": "Add",
+    "close": "Close",
+    "copy": "Copy",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "generate": "Generate",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "search": "Search",
+    "back": "Back",
+    "loading": "Loading...",
+    "noData": "No data"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "table": {
+    "search": "Search...",
+    "noResults": "No results found.",
+    "pagination": "Page {{page}} of {{total}}",
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next",
+    "selectedCount": "{{count}} selected",
+    "sortedAsc": "Sorted ascending",
+    "sortedDesc": "Sorted descending",
+    "sortUnsorted": "Not sorted"
+  },
+  "confirm": {
+    "deleteTitle": "Delete Confirmation",
+    "deleteDescription": "Are you sure you want to delete this item? This action cannot be undone."
+  },
+  "targetTypes": {
+    "Ssh": "SSH",
+    "Kubernetes": "Kubernetes",
+    "MySql": "MySQL",
+    "Postgres": "PostgreSQL",
+    "WebAdmin": "Web Admin",
+    "Api": "API"
+  },
+  "errorPage": {
+    "kicker": "Gateway access UI",
+    "eyebrow": "Application error",
+    "title": "This page could not be loaded",
+    "genericDescription": "Something went wrong while opening this screen. You can retry, go back, or return to the dashboard.",
+    "chunkDescription": "Part of the web app failed to load. This usually happens after a deployment or when the browser is still using an outdated asset cache.",
+    "messageLabel": "Technical details",
+    "details": "Why am I seeing this?",
+    "detailsHelp": "If retrying does not help, refresh the page or reopen the dashboard. If the problem keeps happening, capture the message above and report it to the administrator.",
+    "actions": {
+      "retry": "Retry",
+      "dashboard": "Go to dashboard",
+      "back": "Go back"
+    }
+  }
+}

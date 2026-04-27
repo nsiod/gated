@@ -1,0 +1,999 @@
+import type { Role, Target, TargetDataRequest, TargetGroup } from '@/features/admin/lib/api'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+import { z } from 'zod'
+import { Button } from '@/shared/components/ui/button'
+import { Checkbox } from '@/shared/components/ui/checkbox'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/components/ui/form'
+import { Input } from '@/shared/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
+import { Switch } from '@/shared/components/ui/switch'
+import { Textarea } from '@/shared/components/ui/textarea'
+
+// ── Schema ────────────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const formSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string(),
+  group_id: z.string(),
+  rate_limit: z.string(),
+
+  target_type: z.enum(['Ssh', 'Kubernetes', 'MySql', 'Postgres', 'WebAdmin', 'Api']),
+
+  // SSH
+  ssh_host: z.string(),
+  ssh_port: z.string(),
+  ssh_username: z.string(),
+  ssh_allow_insecure_algos: z.boolean(),
+  ssh_auth_type: z.enum(['Password', 'PublicKey']),
+  ssh_password: z.string(),
+
+  // Kubernetes
+  k8s_cluster_url: z.string(),
+  k8s_tls_mode: z.enum(['Disabled', 'Preferred', 'Required']),
+  k8s_tls_verify: z.boolean(),
+  k8s_ca_certificate: z.string(),
+  k8s_auth_type: z.enum(['Token', 'Certificate']),
+  k8s_token: z.string(),
+  k8s_certificate: z.string(),
+  k8s_private_key: z.string(),
+
+  // MySQL
+  mysql_host: z.string(),
+  mysql_port: z.string(),
+  mysql_username: z.string(),
+  mysql_password: z.string(),
+  mysql_tls_mode: z.enum(['Disabled', 'Preferred', 'Required']),
+  mysql_tls_verify: z.boolean(),
+  mysql_default_database: z.string(),
+  mysql_readonly: z.boolean(),
+
+  // Postgres
+  pg_host: z.string(),
+  pg_port: z.string(),
+  pg_username: z.string(),
+  pg_password: z.string(),
+  pg_tls_mode: z.enum(['Disabled', 'Preferred', 'Required']),
+  pg_tls_verify: z.boolean(),
+  pg_idle_timeout: z.string(),
+  pg_default_database: z.string(),
+  pg_readonly: z.boolean(),
+
+  // API
+  api_url: z.string(),
+  api_tls_mode: z.enum(['Disabled', 'Preferred', 'Required']),
+  api_tls_verify: z.boolean(),
+
+  // Roles (used on create only)
+  role_ids: z.array(z.string()),
+})
+
+export type FormValues = z.infer<typeof formSchema>
+
+// ── Defaults ──────────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const EMPTY_DEFAULTS: FormValues = {
+  name: '',
+  description: '',
+  group_id: '',
+  rate_limit: '',
+  target_type: 'Ssh',
+  ssh_host: '',
+  ssh_port: '22',
+  ssh_username: '',
+  ssh_allow_insecure_algos: false,
+  ssh_auth_type: 'PublicKey',
+  ssh_password: '',
+  k8s_cluster_url: '',
+  k8s_tls_mode: 'Required',
+  k8s_tls_verify: true,
+  k8s_ca_certificate: '',
+  k8s_auth_type: 'Token',
+  k8s_token: '',
+  k8s_certificate: '',
+  k8s_private_key: '',
+  mysql_host: '',
+  mysql_port: '3306',
+  mysql_username: '',
+  mysql_password: '',
+  mysql_tls_mode: 'Preferred',
+  mysql_tls_verify: true,
+  mysql_default_database: '',
+  mysql_readonly: false,
+  pg_host: '',
+  pg_port: '5432',
+  pg_username: '',
+  pg_password: '',
+  pg_tls_mode: 'Preferred',
+  pg_tls_verify: true,
+  pg_idle_timeout: '',
+  pg_default_database: '',
+  pg_readonly: false,
+  api_url: '',
+  api_tls_mode: 'Preferred',
+  api_tls_verify: true,
+  role_ids: [],
+}
+
+// ── Converter: Target → FormValues ─────────────────────────────────────────────
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function targetToFormValues(target: Target): FormValues {
+  const opts = target.options
+  const base: FormValues = {
+    ...EMPTY_DEFAULTS,
+    name: target.name,
+    description: target.description ?? '',
+    group_id: target.group_id ?? '',
+    rate_limit: target.rate_limit_bytes_per_second?.toString() ?? '',
+    target_type: opts.kind,
+  }
+
+  switch (opts.kind) {
+    case 'Ssh':
+      return {
+        ...base,
+        ssh_host: opts.host,
+        ssh_port: opts.port.toString(),
+        ssh_username: opts.username,
+        ssh_allow_insecure_algos: opts.allow_insecure_algos ?? false,
+        ssh_auth_type: opts.auth.kind,
+        ssh_password: opts.auth.kind === 'Password' ? opts.auth.password : '',
+      }
+    case 'Kubernetes':
+      return {
+        ...base,
+        k8s_cluster_url: opts.cluster_url,
+        k8s_tls_mode: opts.tls.mode,
+        k8s_tls_verify: opts.tls.verify,
+        k8s_ca_certificate: opts.ca_certificate ?? '',
+        k8s_auth_type: opts.auth.kind,
+        k8s_token: opts.auth.kind === 'Token' ? opts.auth.token : '',
+        k8s_certificate: opts.auth.kind === 'Certificate' ? opts.auth.certificate : '',
+        k8s_private_key: opts.auth.kind === 'Certificate' ? opts.auth.private_key : '',
+      }
+    case 'MySql':
+      return {
+        ...base,
+        mysql_host: opts.host,
+        mysql_port: opts.port.toString(),
+        mysql_username: opts.username,
+        mysql_password: opts.password ?? '',
+        mysql_tls_mode: opts.tls.mode,
+        mysql_tls_verify: opts.tls.verify,
+        mysql_default_database: opts.default_database_name ?? '',
+        mysql_readonly: opts.readonly ?? false,
+      }
+    case 'Postgres':
+      return {
+        ...base,
+        pg_host: opts.host,
+        pg_port: opts.port.toString(),
+        pg_username: opts.username,
+        pg_password: opts.password ?? '',
+        pg_tls_mode: opts.tls.mode,
+        pg_tls_verify: opts.tls.verify,
+        pg_idle_timeout: opts.idle_timeout ?? '',
+        pg_default_database: opts.default_database_name ?? '',
+        pg_readonly: opts.readonly ?? false,
+      }
+    case 'WebAdmin':
+      return base
+    case 'Api':
+      return {
+        ...base,
+        api_url: opts.url,
+        api_tls_mode: opts.tls.mode,
+        api_tls_verify: opts.tls.verify,
+      }
+  }
+}
+
+// ── Converter: FormValues → TargetDataRequest ─────────────────────────────────
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildRequest(values: FormValues): TargetDataRequest {
+  const base = {
+    name: values.name,
+    description: values.description !== '' ? values.description : undefined,
+    group_id: (values.group_id !== '' && values.group_id !== '__none__') ? values.group_id : undefined,
+    rate_limit_bytes_per_second: values.rate_limit !== '' ? Number.parseInt(values.rate_limit, 10) : undefined,
+  }
+
+  switch (values.target_type) {
+    case 'Ssh':
+      return {
+        ...base,
+        options: {
+          kind: 'Ssh',
+          host: values.ssh_host,
+          port: Number.parseInt(values.ssh_port, 10) || 22,
+          username: values.ssh_username,
+          allow_insecure_algos: values.ssh_allow_insecure_algos || undefined,
+          auth:
+            values.ssh_auth_type === 'Password'
+              ? { kind: 'Password', password: values.ssh_password }
+              : { kind: 'PublicKey' },
+        },
+      }
+    case 'Kubernetes':
+      return {
+        ...base,
+        options: {
+          kind: 'Kubernetes',
+          cluster_url: values.k8s_cluster_url,
+          tls: { mode: values.k8s_tls_mode, verify: values.k8s_tls_verify },
+          ca_certificate: values.k8s_ca_certificate || undefined,
+          auth:
+            values.k8s_auth_type === 'Token'
+              ? { kind: 'Token', token: values.k8s_token }
+              : {
+                  kind: 'Certificate',
+                  certificate: values.k8s_certificate,
+                  private_key: values.k8s_private_key,
+                },
+        },
+      }
+    case 'MySql':
+      return {
+        ...base,
+        options: {
+          kind: 'MySql',
+          host: values.mysql_host,
+          port: Number.parseInt(values.mysql_port, 10) || 3306,
+          username: values.mysql_username,
+          password: values.mysql_password || undefined,
+          tls: { mode: values.mysql_tls_mode, verify: values.mysql_tls_verify },
+          default_database_name: values.mysql_default_database || undefined,
+          readonly: values.mysql_readonly,
+        },
+      }
+    case 'Postgres':
+      return {
+        ...base,
+        options: {
+          kind: 'Postgres',
+          host: values.pg_host,
+          port: Number.parseInt(values.pg_port, 10) || 5432,
+          username: values.pg_username,
+          password: values.pg_password || undefined,
+          tls: { mode: values.pg_tls_mode, verify: values.pg_tls_verify },
+          idle_timeout: values.pg_idle_timeout || undefined,
+          default_database_name: values.pg_default_database || undefined,
+          readonly: values.pg_readonly,
+        },
+      }
+    case 'WebAdmin':
+      return { ...base, options: { kind: 'WebAdmin' } }
+    case 'Api':
+      return {
+        ...base,
+        options: {
+          kind: 'Api',
+          url: values.api_url,
+          tls: { mode: values.api_tls_mode, verify: values.api_tls_verify },
+          headers: {},
+        },
+      }
+  }
+}
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useTargetForm(defaultValues: FormValues) {
+  return useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+  })
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function TlsFields({
+  form,
+  prefix,
+}: {
+  form: ReturnType<typeof useTargetForm>
+  prefix: 'k8s' | 'mysql' | 'pg' | 'api'
+}) {
+  const { t } = useTranslation('admin')
+  const modeField = `${prefix}_tls_mode` as const
+  const verifyField = `${prefix}_tls_verify` as const
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name={modeField}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('targets.tls.mode')}</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="Disabled">{t('targets.tls.disabled')}</SelectItem>
+                <SelectItem value="Preferred">{t('targets.tls.preferred')}</SelectItem>
+                <SelectItem value="Required">{t('targets.tls.required')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name={verifyField}
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-center gap-3 space-y-0 pt-8">
+            <FormControl>
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+            </FormControl>
+            <FormLabel className="font-normal">{t('targets.tls.verify')}</FormLabel>
+          </FormItem>
+        )}
+      />
+    </div>
+  )
+}
+
+// ── Main Form Fields Component ─────────────────────────────────────────────────
+
+interface TargetFormFieldsProps {
+  form: ReturnType<typeof useTargetForm>
+  groups: TargetGroup[]
+  typeReadOnly?: boolean
+  roles?: Role[]
+}
+
+export function TargetFormFields({ form, groups, typeReadOnly = false, roles }: TargetFormFieldsProps) {
+  const { t } = useTranslation('admin')
+  const targetType = form.watch('target_type')
+  const sshAuthType = form.watch('ssh_auth_type')
+  const k8sAuthType = form.watch('k8s_auth_type')
+
+  return (
+    <div className="space-y-6">
+      {/* Common fields */}
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="target_type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('targets.form.type')}</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={typeReadOnly}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue>
+                      {(value: string | null) => value !== null && value !== '' ? t(`common:targetTypes.${value}`, value) : ''}
+                    </SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Ssh">{t('common:targetTypes.Ssh')}</SelectItem>
+                  <SelectItem value="Kubernetes">{t('common:targetTypes.Kubernetes')}</SelectItem>
+                  <SelectItem value="MySql">{t('common:targetTypes.MySql')}</SelectItem>
+                  <SelectItem value="Postgres">{t('common:targetTypes.Postgres')}</SelectItem>
+                  <SelectItem value="WebAdmin">{t('common:targetTypes.WebAdmin')}</SelectItem>
+                  <SelectItem value="Api">{t('common:targetTypes.Api')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('targets.form.name')}</FormLabel>
+              <FormControl>
+                <Input placeholder={t('targets.form.namePlaceholder')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('targets.form.description')}</FormLabel>
+            <FormControl>
+              <Input placeholder={t('targets.form.descriptionPlaceholder')} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="group_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('targets.form.group')}</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('targets.form.noGroup')} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="__none__">{t('targets.form.noGroup')}</SelectItem>
+                  {groups.map(g => (
+                    <SelectItem key={g.id} value={g.id}>
+                      {g.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="rate_limit"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('targets.form.rateLimit')}</FormLabel>
+              <FormControl>
+                <Input placeholder={t('targets.form.rateLimitPlaceholder')} type="number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* SSH fields */}
+      {targetType === 'Ssh' && (
+        <div className="space-y-4 rounded-md border p-4">
+          <h3 className="font-medium text-sm">{t('targets.ssh.section')}</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="ssh_host"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.ssh.host')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="192.168.1.1" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="ssh_port"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.ssh.port')}</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="22" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="ssh_username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('targets.ssh.username')}</FormLabel>
+                <FormControl>
+                  <Input placeholder="root" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="ssh_allow_insecure_algos"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center gap-3 space-y-0">
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <FormLabel className="font-normal">{t('targets.ssh.allowInsecureAlgos')}</FormLabel>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="ssh_auth_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('targets.ssh.auth')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue>
+                        {(value: string | null) =>
+                          value === 'PublicKey'
+                            ? t('targets.ssh.authPublicKey')
+                            : value === 'Password'
+                              ? t('targets.ssh.authPassword')
+                              : ''}
+                      </SelectValue>
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="PublicKey">{t('targets.ssh.authPublicKey')}</SelectItem>
+                    <SelectItem value="Password">{t('targets.ssh.authPassword')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {sshAuthType === 'Password' && (
+            <FormField
+              control={form.control}
+              name="ssh_password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.ssh.password')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Kubernetes fields */}
+      {targetType === 'Kubernetes' && (
+        <div className="space-y-4 rounded-md border p-4">
+          <h3 className="font-medium text-sm">{t('targets.kubernetes.section')}</h3>
+          <FormField
+            control={form.control}
+            name="k8s_cluster_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('targets.kubernetes.clusterUrl')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t('targets.kubernetes.clusterUrlPlaceholder')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <TlsFields form={form} prefix="k8s" />
+          <FormField
+            control={form.control}
+            name="k8s_ca_certificate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('targets.kubernetes.caCertificate')}</FormLabel>
+                <FormControl>
+                  <Textarea
+                    rows={5}
+                    className="font-mono text-xs"
+                    placeholder="-----BEGIN CERTIFICATE-----&#10;..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="k8s_auth_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('targets.kubernetes.auth')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Token">{t('targets.kubernetes.authToken')}</SelectItem>
+                    <SelectItem value="Certificate">{t('targets.kubernetes.authCertificate')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {k8sAuthType === 'Token' && (
+            <FormField
+              control={form.control}
+              name="k8s_token"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.kubernetes.token')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {k8sAuthType === 'Certificate' && (
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="k8s_certificate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('targets.kubernetes.certificate')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder="-----BEGIN CERTIFICATE-----" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="k8s_private_key"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('targets.kubernetes.privateKey')}</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="-----BEGIN PRIVATE KEY-----" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MySQL fields */}
+      {targetType === 'MySql' && (
+        <div className="space-y-4 rounded-md border p-4">
+          <h3 className="font-medium text-sm">{t('targets.mysql.section')}</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="mysql_host"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.mysql.host')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="db.example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="mysql_port"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.mysql.port')}</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="3306" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="mysql_username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.mysql.username')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="root" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="mysql_password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.mysql.password')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <TlsFields form={form} prefix="mysql" />
+          <FormField
+            control={form.control}
+            name="mysql_default_database"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('targets.mysql.defaultDatabase')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t('targets.form.optionalPlaceholder')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="mysql_readonly"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center gap-3 space-y-0">
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <div>
+                  <FormLabel className="font-normal">{t('targets.readonly.label')}</FormLabel>
+                  <p className="text-xs text-muted-foreground">{t('targets.readonly.hint')}</p>
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
+
+      {/* Postgres fields */}
+      {targetType === 'Postgres' && (
+        <div className="space-y-4 rounded-md border p-4">
+          <h3 className="font-medium text-sm">{t('targets.postgres.section')}</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="pg_host"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.postgres.host')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="db.example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="pg_port"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.postgres.port')}</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="5432" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="pg_username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.postgres.username')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="postgres" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="pg_password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.postgres.password')}</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <TlsFields form={form} prefix="pg" />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="pg_default_database"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.postgres.defaultDatabase')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('targets.form.optionalPlaceholder')} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="pg_idle_timeout"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('targets.postgres.idleTimeout')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('targets.postgres.idleTimeoutPlaceholder')} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="pg_readonly"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center gap-3 space-y-0">
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <div>
+                  <FormLabel className="font-normal">{t('targets.readonly.label')}</FormLabel>
+                  <p className="text-xs text-muted-foreground">{t('targets.readonly.hint')}</p>
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
+
+      {/* API fields */}
+      {targetType === 'Api' && (
+        <div className="space-y-4 rounded-md border p-4">
+          <h3 className="font-medium text-sm">{t('targets.api.section')}</h3>
+          <FormField
+            control={form.control}
+            name="api_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('targets.api.url')}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t('targets.api.urlPlaceholder')} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <TlsFields form={form} prefix="api" />
+        </div>
+      )}
+
+      {/* WebAdmin: no extra fields needed */}
+
+      {/* Roles (create only) */}
+      {roles != null && (
+        <FormField
+          control={form.control}
+          name="role_ids"
+          render={({ field }) => (
+            <FormItem className="space-y-3 rounded-md border p-4">
+              <div>
+                <FormLabel>{t('targets.form.roles')}</FormLabel>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('targets.form.rolesDescription')}
+                </p>
+              </div>
+              {roles.length === 0
+                ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t('targets.form.rolesNoneAvailable')}
+                    </p>
+                  )
+                : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {roles.map((role) => {
+                        const checked = field.value.includes(role.id)
+                        return (
+                          <label
+                            key={role.id}
+                            className="flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer hover:bg-accent"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(next) => {
+                                const isChecked = next === true
+                                if (isChecked && !checked)
+                                  field.onChange([...field.value, role.id])
+                                else if (!isChecked && checked)
+                                  field.onChange(field.value.filter(id => id !== role.id))
+                              }}
+                            />
+                            <span className="text-sm">{role.name}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Form Wrapper ───────────────────────────────────────────────────────────────
+
+interface TargetFormProps {
+  defaultValues: FormValues
+  groups: TargetGroup[]
+  onSubmit: (values: FormValues) => void
+  isSubmitting?: boolean
+  submitLabel?: string
+  typeReadOnly?: boolean
+  roles?: Role[]
+}
+
+export function TargetForm({
+  defaultValues,
+  groups,
+  onSubmit,
+  isSubmitting,
+  submitLabel,
+  typeReadOnly,
+  roles,
+}: TargetFormProps) {
+  const { t: tc } = useTranslation('common')
+  const form = useTargetForm(defaultValues)
+
+  return (
+    <Form {...form}>
+      <form onSubmit={e => void form.handleSubmit(onSubmit)(e)} className="space-y-6">
+        <TargetFormFields form={form} groups={groups} typeReadOnly={typeReadOnly} roles={roles} />
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {submitLabel ?? tc('actions.save')}
+        </Button>
+      </form>
+    </Form>
+  )
+}

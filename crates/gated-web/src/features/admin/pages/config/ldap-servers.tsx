@@ -1,0 +1,149 @@
+import type { ColumnDef } from '@tanstack/react-table'
+import type { LdapServerResponse } from '@/features/admin/lib/api-client'
+import { Building2, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
+import { useDeleteLdapServerMutation, useLdapServersQuery } from '@/features/admin/api'
+import { ConfirmDialog } from '@/shared/components/confirm-dialog'
+import { DataTable } from '@/shared/components/data-table'
+import { EmptyState } from '@/shared/components/empty-state'
+import { PageHeader } from '@/shared/components/page-header'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+
+export function Component() {
+  const { t } = useTranslation(['admin', 'common'])
+  const navigate = useNavigate()
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+
+  const { data: servers = [], isLoading } = useLdapServersQuery()
+  const deleteMutation = useDeleteLdapServerMutation()
+
+  const handleDelete = async () => {
+    if (deleteId == null)
+      return
+    try {
+      await deleteMutation.mutateAsync(deleteId)
+      toast.success(t('ldap.deleted'))
+    }
+    catch {
+      toast.error(t('ldap.deleteError'))
+    }
+    finally {
+      setDeleteId(null)
+    }
+  }
+
+  const columns: ColumnDef<LdapServerResponse>[] = [
+    {
+      accessorKey: 'name',
+      header: t('ldap.columns.name'),
+      cell: ({ row }) => (
+        <button
+          className="font-medium text-primary hover:underline text-left"
+          onClick={() => void navigate(row.original.id)}
+        >
+          {row.original.name}
+        </button>
+      ),
+    },
+    {
+      id: 'url',
+      header: t('ldap.columns.host'),
+      cell: ({ row }) => (
+        <span className="font-mono text-sm text-muted-foreground">
+          {row.original.host}
+          :
+          {row.original.port}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'tls_mode',
+      header: t('ldap.columns.tls'),
+      cell: ({ row }) => (
+        <Badge variant={row.original.tls_mode === 'Disabled' ? 'secondary' : 'default'}>
+          {row.original.tls_mode}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'enabled',
+      header: t('ldap.columns.status'),
+      cell: ({ row }) => (
+        <Badge variant={row.original.enabled ? 'default' : 'secondary'}>
+          {row.original.enabled ? t('ldap.status.enabled') : t('ldap.status.disabled')}
+        </Badge>
+      ),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              setDeleteId(row.original.id)
+            }}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
+  return (
+    <div>
+      <PageHeader
+        title={t('pages.ldapServers')}
+        description={t('ldap.description')}
+        actions={(
+          <Button onClick={() => void navigate('new')}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t('ldap.create')}
+          </Button>
+        )}
+      />
+
+      {isLoading
+        ? (
+            <p className="text-muted-foreground">{t('actions.loading', { ns: 'common' })}</p>
+          )
+        : (
+            <DataTable
+              columns={columns}
+              data={servers}
+              searchPlaceholder={t('ldap.searchPlaceholder')}
+              onRowClick={row => void navigate(row.id)}
+              emptyState={(
+                <EmptyState
+                  icon={Building2}
+                  title={t('ldap.emptyTitle')}
+                  description={t('ldap.emptyDescription')}
+                  action={(
+                    <Button onClick={() => void navigate('new')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t('ldap.create')}
+                    </Button>
+                  )}
+                />
+              )}
+            />
+          )}
+
+      <ConfirmDialog
+        open={deleteId != null}
+        onOpenChange={open => !open && setDeleteId(null)}
+        title={t('ldap.deleteTitle')}
+        description={t('ldap.deleteDescription')}
+        confirmLabel={t('actions.delete', { ns: 'common' })}
+        onConfirm={() => void handleDelete()}
+      />
+    </div>
+  )
+}

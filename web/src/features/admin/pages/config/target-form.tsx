@@ -151,7 +151,7 @@ export function targetToFormValues(target: Target): FormValues {
       return {
         ...base,
         ssh_host: opts.host,
-        ssh_port: opts.port.toString(),
+        ssh_port: opts.port?.toString() ?? '22',
         ssh_username: opts.username,
         ssh_allow_insecure_algos: opts.allow_insecure_algos ?? false,
         ssh_auth_type: opts.auth.kind,
@@ -173,7 +173,7 @@ export function targetToFormValues(target: Target): FormValues {
       return {
         ...base,
         mysql_host: opts.host,
-        mysql_port: opts.port.toString(),
+        mysql_port: opts.port?.toString() ?? '3306',
         mysql_username: opts.username,
         mysql_password: opts.password ?? '',
         mysql_tls_mode: opts.tls.mode,
@@ -185,7 +185,7 @@ export function targetToFormValues(target: Target): FormValues {
       return {
         ...base,
         pg_host: opts.host,
-        pg_port: opts.port.toString(),
+        pg_port: opts.port?.toString() ?? '5432',
         pg_username: opts.username,
         pg_password: opts.password ?? '',
         pg_tls_mode: opts.tls.mode,

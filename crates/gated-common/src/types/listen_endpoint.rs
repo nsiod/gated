@@ -2,11 +2,13 @@ use std::fmt::Debug;
 use std::io::ErrorKind;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs};
 
-use futures::stream::{iter, FuturesUnordered};
-use futures::{Stream, StreamExt, TryStreamExt};
-use poem::listener::Listener;
+use futures::Stream;
+use poem::http::uri::Scheme;
+use poem::listener::{Acceptor, AcceptorExt, BoxAcceptor, BoxListener, Listener};
+use poem::web::{LocalAddr, RemoteAddr};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use socket2::{Domain, Protocol, Socket, Type};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_stream::wrappers::TcpListenerStream;
 
@@ -20,54 +22,71 @@ impl ListenEndpoint {
         self.0
     }
 
+    /// Compute the concrete addresses we need to bind, factoring in the
+    /// `[::]` IPv6-unspecified case where some kernels need an explicit
+    /// IPv4 socket alongside the IPv6 one.
     pub fn addresses_to_listen_on(&self) -> Result<Vec<SocketAddr>, GatedError> {
-        // For [::], explicitly return both addresses so that we are not affected
-        // by the state of the ipv6only sysctl.
         if self.0.ip() == Ipv6Addr::UNSPECIFIED {
-            let addr6 = SocketAddr::new(Ipv6Addr::UNSPECIFIED.into(), self.0.port());
-            let addr4 = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), self.0.port());
-            let listener6 = std::net::TcpListener::bind(addr6)?;
-            let listener4 = std::net::TcpListener::bind(addr4);
-            let result = match listener4 {
-                Ok(_) => vec![addr4, addr6],
-                Err(e) if e.kind() == ErrorKind::AddrInUse => vec![addr6],
-                Err(e) => return Err(GatedError::Io(e)),
-            };
-            drop(listener6);
-            Ok(result)
+            Ok(vec![
+                SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), self.0.port()),
+                SocketAddr::new(Ipv6Addr::UNSPECIFIED.into(), self.0.port()),
+            ])
         } else {
             Ok(vec![self.0])
         }
     }
 
-    pub async fn tcp_listeners(&self) -> Result<Vec<TcpListener>, GatedError> {
-        Ok(self
-            .addresses_to_listen_on()?
-            .into_iter()
-            .map(TcpListener::bind)
-            .collect::<FuturesUnordered<_>>()
-            .try_collect()
-            .await?)
+    /// Bind every required address with `SO_REUSEADDR` so a previous
+    /// instance's `TIME_WAIT` sockets don't block restart. Returns
+    /// blocking `std::net::TcpListener`s ready to be promoted to either
+    /// tokio or poem listeners.
+    fn bind_listeners(&self) -> Result<Vec<std::net::TcpListener>, GatedError> {
+        if self.0.ip() == Ipv6Addr::UNSPECIFIED {
+            // Try v6 first; on dual-stack kernels (default Linux,
+            // `IPV6_V6ONLY=0`) it also covers v4 traffic, in which case
+            // the subsequent v4 bind raises `AddrInUse` and we drop it.
+            // On v6-only kernels we keep both.
+            let v6 = bind_one(SocketAddr::new(Ipv6Addr::UNSPECIFIED.into(), self.0.port()))?;
+            match bind_one(SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), self.0.port())) {
+                Ok(v4) => Ok(vec![v4, v6]),
+                Err(GatedError::Io(e)) if e.kind() == ErrorKind::AddrInUse => Ok(vec![v6]),
+                Err(e) => Err(e),
+            }
+        } else {
+            Ok(vec![bind_one(self.0)?])
+        }
     }
 
-    pub async fn poem_listener(&self) -> Result<poem::listener::BoxListener, GatedError> {
-        let addrs = self.addresses_to_listen_on()?;
-        #[allow(clippy::unwrap_used)] // length known >=1
-        let (first, rest) = addrs.split_first().unwrap();
-        let mut listener: poem::listener::BoxListener =
-            poem::listener::TcpListener::bind(first.to_string()).boxed();
-        for addr in rest {
-            listener = listener
-                .combine(poem::listener::TcpListener::bind(addr.to_string()))
-                .boxed();
-        }
+    pub async fn tcp_listeners(&self) -> Result<Vec<TcpListener>, GatedError> {
+        self.bind_listeners()?
+            .into_iter()
+            .map(|l| TcpListener::from_std(l).map_err(GatedError::Io))
+            .collect()
+    }
 
-        Ok(listener)
+    pub async fn poem_listener(&self) -> Result<BoxListener, GatedError> {
+        let mut acceptors = self
+            .bind_listeners()?
+            .into_iter()
+            .map(|l| {
+                poem::listener::TcpAcceptor::from_std(l)
+                    .map(|a| a.boxed())
+                    .map_err(GatedError::Io)
+            })
+            .collect::<Result<Vec<BoxAcceptor>, _>>()?
+            .into_iter();
+
+        #[allow(clippy::unwrap_used)] // bind_listeners guarantees length >= 1
+        let first = acceptors.next().unwrap();
+        let combined = acceptors.fold(first, |acc, next| acc.combine(next).boxed());
+
+        Ok(PreBoundListener { acceptor: combined }.boxed())
     }
 
     pub async fn tcp_accept_stream(
         &self,
     ) -> Result<impl Stream<Item = std::io::Result<TcpStream>>, GatedError> {
+        use futures::stream::{iter, StreamExt};
         Ok(iter(
             self.tcp_listeners()
                 .await?
@@ -80,6 +99,56 @@ impl ListenEndpoint {
     pub fn port(&self) -> u16 {
         self.0.port()
     }
+}
+
+/// Wraps an already-bound poem `Acceptor` so callers can still consume it
+/// through poem's `Listener` trait (which is what `Server::new` and
+/// `.rustls(...)` expect).
+struct PreBoundListener {
+    acceptor: BoxAcceptor,
+}
+
+impl Listener for PreBoundListener {
+    type Acceptor = PreBoundAcceptor;
+
+    async fn into_acceptor(self) -> std::io::Result<Self::Acceptor> {
+        Ok(PreBoundAcceptor {
+            inner: self.acceptor,
+        })
+    }
+}
+
+struct PreBoundAcceptor {
+    inner: BoxAcceptor,
+}
+
+impl Acceptor for PreBoundAcceptor {
+    type Io = <BoxAcceptor as Acceptor>::Io;
+
+    fn local_addr(&self) -> Vec<LocalAddr> {
+        self.inner.local_addr()
+    }
+
+    async fn accept(
+        &mut self,
+    ) -> std::io::Result<(Self::Io, LocalAddr, RemoteAddr, Scheme)> {
+        self.inner.accept().await
+    }
+}
+
+fn bind_one(addr: SocketAddr) -> Result<std::net::TcpListener, GatedError> {
+    let domain = if addr.is_ipv6() {
+        Domain::IPV6
+    } else {
+        Domain::IPV4
+    };
+    let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
+    socket.set_reuse_address(true)?;
+    socket.bind(&addr.into())?;
+    socket.listen(1024)?;
+    let listener: std::net::TcpListener = socket.into();
+    listener.set_nonblocking(true)?;
+    Ok(listener)
 }
 
 impl From<SocketAddr> for ListenEndpoint {

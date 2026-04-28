@@ -13,7 +13,8 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 8889,
+    // Vite picks up `PORT` from the env (set by `nsl run`). For `dev:bare`
+    // it falls back to the Vite default (5173).
     allowedHosts: true,
   },
   build: {

@@ -40,6 +40,7 @@ import {
 import { Separator } from '@/shared/components/ui/separator'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { Textarea } from '@/shared/components/ui/textarea'
+import { groupColorClass } from '@/shared/lib/group-color'
 import { targetTypeClass } from '@/shared/lib/target-types'
 import { cn, isBlank } from '@/shared/lib/utils'
 
@@ -53,17 +54,6 @@ const COLORS: BootstrapThemeColor[] = [
   'Light',
   'Dark',
 ]
-
-const colorVariantMap: Record<string, string> = {
-  Primary: 'bg-blue-500 text-white',
-  Secondary: 'bg-gray-500 text-white',
-  Success: 'bg-green-500 text-white',
-  Danger: 'bg-red-500 text-white',
-  Warning: 'bg-yellow-500 text-white',
-  Info: 'bg-cyan-500 text-white',
-  Light: 'bg-gray-100 text-gray-800',
-  Dark: 'bg-gray-800 text-white',
-}
 
 interface FormValues {
   name: string
@@ -266,7 +256,7 @@ export function Component() {
         title={(
           <span className="flex items-center gap-2">
             {group.color != null && (
-              <Badge className={colorVariantMap[group.color] ?? ''}>{group.color}</Badge>
+              <Badge variant="outline" className={groupColorClass(group.color)}>{group.color}</Badge>
             )}
             {group.name}
           </span>

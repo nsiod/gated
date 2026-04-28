@@ -1,13 +1,13 @@
 const PALETTE = [
-  'bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100',
-  'bg-orange-100 text-orange-900 dark:bg-orange-900 dark:text-orange-100',
-  'bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-100',
-  'bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100',
-  'bg-teal-100 text-teal-900 dark:bg-teal-900 dark:text-teal-100',
-  'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100',
-  'bg-indigo-100 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-100',
-  'bg-purple-100 text-purple-900 dark:bg-purple-900 dark:text-purple-100',
-  'bg-pink-100 text-pink-900 dark:bg-pink-900 dark:text-pink-100',
+  'bg-tone-red text-tone-red-fg',
+  'bg-tone-orange text-tone-orange-fg',
+  'bg-tone-amber text-tone-amber-fg',
+  'bg-tone-green text-tone-green-fg',
+  'bg-tone-teal text-tone-teal-fg',
+  'bg-tone-blue text-tone-blue-fg',
+  'bg-tone-indigo text-tone-indigo-fg',
+  'bg-tone-purple text-tone-purple-fg',
+  'bg-tone-pink text-tone-pink-fg',
 ] as const
 
 export function avatarColor(seed: string | null | undefined): string {

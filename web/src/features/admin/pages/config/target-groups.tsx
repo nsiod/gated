@@ -20,18 +20,8 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { groupColorClass } from '@/shared/lib/group-color'
 import { isBlank } from '@/shared/lib/utils'
-
-const colorClassMap: Record<string, string> = {
-  Primary: 'bg-blue-500 text-white',
-  Secondary: 'bg-gray-500 text-white',
-  Success: 'bg-green-500 text-white',
-  Danger: 'bg-red-500 text-white',
-  Warning: 'bg-yellow-500 text-white',
-  Info: 'bg-cyan-500 text-white',
-  Light: 'bg-gray-100 text-gray-800',
-  Dark: 'bg-gray-800 text-white',
-}
 
 export function Component() {
   const { t } = useTranslation(['admin', 'common'])
@@ -69,7 +59,7 @@ export function Component() {
         if (color == null)
           return <EmptyCell />
         return (
-          <Badge className={colorClassMap[color] ?? ''}>
+          <Badge variant="outline" className={groupColorClass(color)}>
             {color}
           </Badge>
         )

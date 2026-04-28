@@ -38,6 +38,24 @@ typecheck:
 test-web *ARGS:
     cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run test {{ARGS}}
 
+# Run backend + Vite together under nsl at http://gated.localhost:3355/ui/.
+dev port="8890":
+    cd {{web_dir}} && bunx nsl route gated:/ {{port}}
+    cd {{web_dir}} && bunx concurrently \
+        --kill-others \
+        --names "backend,frontend" \
+        --prefix-colors "blue,magenta" \
+        "cd {{justfile_directory()}} && just run" \
+        "bunx nsl run -n gated:/ui -- vite"
+
+# Manually register an already-running backend with nsl at gated:/.
+nsl-route-backend port="8890":
+    cd {{web_dir}} && bunx nsl route gated:/ {{port}}
+
+# List nsl's active route table.
+nsl-status:
+    cd {{web_dir}} && bunx nsl list
+
 i18n-check:
     cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run i18n-check
 

@@ -9,51 +9,51 @@ interface StatusBadgeProps {
   className?: string
 }
 
-const statusConfig: Record<string, { label: string, className: string, dot: string }> = {
+const statusConfig: Record<string, { label: string, surface: string, dot: string }> = {
   active: {
     label: 'Active',
-    className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
-    dot: 'bg-emerald-500',
+    surface: 'bg-success text-success-foreground border-success-foreground/25',
+    dot: 'bg-success-foreground',
   },
   inactive: {
     label: 'Inactive',
-    className: 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700',
-    dot: 'bg-gray-400',
+    surface: 'bg-muted text-muted-foreground border-border',
+    dot: 'bg-muted-foreground/60',
   },
   enabled: {
     label: 'Enabled',
-    className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
-    dot: 'bg-emerald-500',
+    surface: 'bg-success text-success-foreground border-success-foreground/25',
+    dot: 'bg-success-foreground',
   },
   disabled: {
     label: 'Disabled',
-    className: 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700',
-    dot: 'bg-gray-400',
+    surface: 'bg-muted text-muted-foreground border-border',
+    dot: 'bg-muted-foreground/60',
   },
   success: {
     label: 'Success',
-    className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
-    dot: 'bg-emerald-500',
+    surface: 'bg-success text-success-foreground border-success-foreground/25',
+    dot: 'bg-success-foreground',
   },
   warning: {
     label: 'Warning',
-    className: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800',
-    dot: 'bg-amber-500',
+    surface: 'bg-warning text-warning-foreground border-warning-foreground/25',
+    dot: 'bg-warning-foreground',
   },
   error: {
     label: 'Error',
-    className: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800',
-    dot: 'bg-red-500',
+    surface: 'bg-destructive/10 text-destructive border-destructive/30 dark:bg-destructive/20',
+    dot: 'bg-destructive',
   },
   pending: {
     label: 'Pending',
-    className: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
-    dot: 'bg-blue-500 animate-pulse',
+    surface: 'bg-info text-info-foreground border-info-foreground/25',
+    dot: 'bg-info-foreground animate-pulse',
   },
   default: {
     label: 'Unknown',
-    className: 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700',
-    dot: 'bg-gray-400',
+    surface: 'bg-muted text-muted-foreground border-border',
+    dot: 'bg-muted-foreground/60',
   },
 }
 
@@ -62,7 +62,7 @@ export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   const displayLabel = label ?? config.label ?? status
 
   return (
-    <Badge variant="outline" className={cn('gap-1.5 font-medium', config.className, className)}>
+    <Badge variant="outline" className={cn('gap-1.5 font-medium', config.surface, className)}>
       <span className={cn('size-1.5 rounded-full shrink-0', config.dot)} />
       {displayLabel}
     </Badge>

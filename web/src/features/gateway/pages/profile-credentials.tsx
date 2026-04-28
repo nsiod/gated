@@ -14,6 +14,7 @@ import {
   useDeletePublicKeyMutation,
 } from '@/features/gateway/api'
 import { CopyButton } from '@/shared/components/copy-button'
+import { PageHeader } from '@/shared/components/page-header'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog'
@@ -261,8 +262,8 @@ export function Component() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-heading font-semibold">{t('gateway:pages.credentials')}</h1>
+    <div className="max-w-2xl">
+      <PageHeader title={t('gateway:pages.credentials')} />
 
       <Tabs defaultValue="public-keys">
         <TabsList>

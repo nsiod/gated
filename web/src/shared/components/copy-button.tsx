@@ -30,7 +30,7 @@ export function CopyButton({ value, label = 'Copy', className }: CopyButtonProps
         />
       )}
       >
-        {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+        {copied ? <Check className="h-4 w-4 text-success-foreground" /> : <Copy className="h-4 w-4" />}
         <span className="sr-only">{label}</span>
       </TooltipTrigger>
       <TooltipContent>{copied ? 'Copied!' : label}</TooltipContent>

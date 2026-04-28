@@ -66,9 +66,9 @@ export function Component() {
         />
 
         <div className="max-w-xl space-y-6">
-          <div className="flex items-start gap-3 rounded-md border border-amber-500/50 bg-amber-500/10 p-4">
-            <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-amber-700 dark:text-amber-400">
+          <div className="flex items-start gap-3 rounded-md border border-warning-foreground/30 bg-warning p-4">
+            <AlertTriangle className="h-5 w-5 text-warning-foreground mt-0.5 shrink-0" />
+            <p className="text-sm text-warning-foreground">
               {t('tickets.secret.warning')}
             </p>
           </div>

@@ -133,15 +133,17 @@ export function GatewayLayout() {
       </Sidebar>
 
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+        <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:px-6">
           <Breadcrumbs />
           <div className="ml-auto flex items-center gap-1">
             <LanguageToggle />
             <ModeToggle />
           </div>
         </header>
-        <main className="flex-1 p-4 overflow-auto">
-          <Outlet />
+        <main className="flex-1 overflow-auto px-4 py-6 lg:px-6">
+          <div className="mx-auto w-full max-w-7xl">
+            <Outlet />
+          </div>
         </main>
       </SidebarInset>
     </SidebarProvider>

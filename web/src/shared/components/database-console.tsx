@@ -244,7 +244,7 @@ export function DatabaseConsole({ kind, targetName }: DatabaseConsoleProps) {
                 {' '}
                 {result.statement_kind}
                 {result.truncated && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-amber-700 dark:text-amber-400">
+                  <span className="ml-2 inline-flex items-center gap-1 text-warning-foreground">
                     <AlertTriangle className="size-3" />
                     {t('sqlConsole.truncated')}
                   </span>

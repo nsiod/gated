@@ -26,7 +26,7 @@ function StandaloneConsole({ kind, targetName }: { kind: 'mysql' | 'postgres', t
         <span className="font-semibold">{targetName}</span>
         <Badge variant="outline">{dbKindLabel}</Badge>
         {readonly && (
-          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700 dark:text-amber-400">
+          <Badge variant="outline" className="gap-1 border-warning-foreground/30 bg-warning text-warning-foreground">
             <Lock className="size-3" />
             {t('sqlConsole.readonly')}
           </Badge>

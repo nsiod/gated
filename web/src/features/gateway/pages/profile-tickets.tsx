@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { useCreateMyTicketMutation, useDeleteMyTicketMutation, useMyTicketsQuery, useTargetsQuery } from '@/features/gateway/api'
 import { CopyButton } from '@/shared/components/copy-button'
+import { PageHeader } from '@/shared/components/page-header'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog'
@@ -104,7 +105,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean, onOpenChang
         {issued != null
           ? (
               <div className="space-y-4">
-                <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{t('gateway:tickets.secretWarning')}</p>
+                <p className="text-sm font-medium text-warning-foreground">{t('gateway:tickets.secretWarning')}</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-xs bg-muted px-3 py-2 rounded font-mono break-all">{issued.secret}</code>
                   <CopyButton value={issued.secret} label={t('common:actions.copy')} />
@@ -238,14 +239,16 @@ export function Component() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-heading font-semibold">{t('gateway:pages.tickets')}</h1>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4 mr-1" />
-          {t('gateway:tickets.create')}
-        </Button>
-      </div>
+    <div className="max-w-2xl">
+      <PageHeader
+        title={t('gateway:pages.tickets')}
+        actions={(
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4 mr-1" />
+            {t('gateway:tickets.create')}
+          </Button>
+        )}
+      />
 
       <Card>
         <CardHeader className="pb-2">

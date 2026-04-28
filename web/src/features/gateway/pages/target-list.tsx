@@ -6,6 +6,7 @@ import { Link } from 'react-router'
 import { useInfoQuery, useTargetsQuery } from '@/features/gateway/api'
 import { CopyButton } from '@/shared/components/copy-button'
 import { EmptyState } from '@/shared/components/empty-state'
+import { PageHeader } from '@/shared/components/page-header'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -190,19 +191,21 @@ export function Component() {
   const targets = (targetsQuery.data ?? []).filter(t => t.kind !== 'WebAdmin')
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold tracking-tight">{t('pages.targetList')}</h1>
-        <div className="relative max-w-xs w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('targetList.search')}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title={t('pages.targetList')}
+        actions={(
+          <div className="relative w-full max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('targetList.search')}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        )}
+      />
 
       {targetsQuery.isPending && <TableSkeleton />}
 

@@ -68,13 +68,13 @@ function kindIcon(kind: TargetKind) {
 function kindIconColor(kind: TargetKind): string {
   switch (kind) {
     case 'MySql':
-      return 'text-orange-600 dark:text-orange-400'
+      return 'text-tone-orange-fg'
     case 'Postgres':
-      return 'text-indigo-600 dark:text-indigo-400'
+      return 'text-tone-indigo-fg'
     case 'Ssh':
-      return 'text-blue-600 dark:text-blue-400'
+      return 'text-tone-blue-fg'
     case 'Kubernetes':
-      return 'text-green-600 dark:text-green-400'
+      return 'text-tone-green-fg'
     case 'WebAdmin':
     case 'Api':
       return 'text-muted-foreground'
@@ -262,7 +262,7 @@ export function ClientLayout() {
                             >
                               <Icon className={`size-4 shrink-0 ${iconColor}`} />
                               <span className="truncate">{target.name}</span>
-                              {hasTab && <span className="ml-auto size-1.5 rounded-full bg-emerald-500 shrink-0 group-data-[collapsible=icon]:hidden" />}
+                              {hasTab && <span className="ml-auto size-1.5 rounded-full bg-tone-green-fg shrink-0 group-data-[collapsible=icon]:hidden" />}
                             </ContextMenuTrigger>
                             <ContextMenuContent>
                               {isDb

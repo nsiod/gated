@@ -526,12 +526,12 @@ export function Component() {
           </CardHeader>
           {testResult && (
             <CardContent>
-              <div className={`flex items-start gap-3 p-3 rounded-md ${testResult.success ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
+              <div className={`flex items-start gap-3 p-3 rounded-md border ${testResult.success ? 'bg-success border-success-foreground/25' : 'bg-destructive/10 border-destructive/30 dark:bg-destructive/20'}`}>
                 {testResult.success
-                  ? <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
-                  : <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />}
+                  ? <CheckCircle2 className="h-5 w-5 text-success-foreground shrink-0 mt-0.5" />
+                  : <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />}
                 <div className="space-y-2">
-                  <p className={`text-sm font-medium ${testResult.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+                  <p className={`text-sm font-medium ${testResult.success ? 'text-success-foreground' : 'text-destructive'}`}>
                     {testResult.message}
                   </p>
                   {testResult.base_dns && testResult.base_dns.length > 0 && (

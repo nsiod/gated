@@ -6,6 +6,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useChangePasswordMutation, useInfoQuery } from '@/features/gateway/api'
+import { PageHeader } from '@/shared/components/page-header'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/components/ui/form'
@@ -46,75 +47,76 @@ export function Component() {
   const username = infoQuery.data?.username
 
   return (
-    <div className="space-y-8 max-w-xl">
-      <div>
-        <h1 className="text-2xl font-heading font-semibold">{t('gateway:pages.profile')}</h1>
-        {username != null && username !== '' && (
-          <p className="text-muted-foreground mt-1">{t('gateway:profile.loggedInAs', { username })}</p>
-        )}
-      </div>
+    <div className="max-w-xl">
+      <PageHeader
+        title={t('gateway:pages.profile')}
+        description={username != null && username !== ''
+          ? t('gateway:profile.loggedInAs', { username })
+          : undefined}
+      />
+      <div className="space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('gateway:profile.changePassword.title')}</CardTitle>
+            <CardDescription>{t('gateway:profile.changePassword.description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={e => void form.handleSubmit(onSubmit)(e)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('gateway:profile.changePassword.newPassword')}</FormLabel>
+                      <FormControl>
+                        <Input type="password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirm"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('gateway:profile.changePassword.confirmPassword')}</FormLabel>
+                      <FormControl>
+                        <Input type="password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={changePasswordMutation.isPending}>
+                  {changePasswordMutation.isPending
+                    ? t('common:actions.loading')
+                    : t('gateway:profile.changePassword.submit')}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('gateway:profile.changePassword.title')}</CardTitle>
-          <CardDescription>{t('gateway:profile.changePassword.description')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={e => void form.handleSubmit(onSubmit)(e)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('gateway:profile.changePassword.newPassword')}</FormLabel>
-                    <FormControl>
-                      <Input type="password" autoComplete="new-password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('gateway:profile.changePassword.confirmPassword')}</FormLabel>
-                    <FormControl>
-                      <Input type="password" autoComplete="new-password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={changePasswordMutation.isPending}>
-                {changePasswordMutation.isPending
-                  ? t('common:actions.loading')
-                  : t('gateway:profile.changePassword.submit')}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+        <Separator />
 
-      <Separator />
-
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">{t('gateway:profile.securitySection')}</h2>
-        <div className="flex flex-col gap-2">
-          <Button render={<Link to="/ui/profile/credentials" />} variant="outline" className="justify-start gap-2 w-fit">
-            <KeyRound className="size-4" />
-            {t('gateway:pages.credentials')}
-          </Button>
-          <Button render={<Link to="/ui/profile/api-tokens" />} variant="outline" className="justify-start gap-2 w-fit">
-            <Coins className="size-4" />
-            {t('gateway:pages.apiTokens')}
-          </Button>
-          <Button render={<Link to="/ui/profile/tickets" />} variant="outline" className="justify-start gap-2 w-fit">
-            <Ticket className="size-4" />
-            {t('gateway:pages.tickets')}
-          </Button>
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold">{t('gateway:profile.securitySection')}</h2>
+          <div className="flex flex-col gap-2">
+            <Button render={<Link to="/ui/profile/credentials" />} variant="outline" className="justify-start gap-2 w-fit">
+              <KeyRound className="size-4" />
+              {t('gateway:pages.credentials')}
+            </Button>
+            <Button render={<Link to="/ui/profile/api-tokens" />} variant="outline" className="justify-start gap-2 w-fit">
+              <Coins className="size-4" />
+              {t('gateway:pages.apiTokens')}
+            </Button>
+            <Button render={<Link to="/ui/profile/tickets" />} variant="outline" className="justify-start gap-2 w-fit">
+              <Ticket className="size-4" />
+              {t('gateway:pages.tickets')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

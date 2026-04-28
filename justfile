@@ -39,14 +39,16 @@ test-web *ARGS:
     cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run test {{ARGS}}
 
 # Run backend + Vite together; nsl banners the actual gated.localhost URL.
-dev port="8890":
-    cd {{web_dir}} && bunx nsl route gated:/ {{port}}
-    cd {{web_dir}} && bunx concurrently \
+# Both processes are nsl-managed: nsl allocates a port and substitutes it into
+# the gated CLI via the literal NSL_PORT placeholder, exactly like the Vite
+# side picks up PORT. -f lets nsl reclaim a stale route from a prior session.
+dev:
+    {{web_dir}}/node_modules/.bin/concurrently \
         --kill-others \
         --names "backend,frontend" \
         --prefix-colors "blue,magenta" \
-        "cd {{justfile_directory()}} && just run" \
-        "bunx nsl run -n gated:/ui -- vite"
+        "{{web_dir}}/node_modules/.bin/nsl run -f -n gated:/ -- env CARGO_BUILD_TARGET={{cargo_target}} cargo run --target {{cargo_target}} --all-features -- --config {{config_path}} run --http-port NSL_PORT" \
+        "cd {{web_dir}} && ./node_modules/.bin/nsl run -f -n gated:/ui -- ./node_modules/.bin/vite"
 
 # Manually register an already-running backend with nsl at gated:/.
 nsl-route-backend port="8890":

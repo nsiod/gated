@@ -49,8 +49,16 @@ fresh nsl install, but a shared dev box may have its daemon configured on a
 different port (`:1355`, etc.). `just dev`'s startup banner prints the real
 URLs.
 
+Both processes are nsl-managed (Pattern A): nsl allocates a free port for each
+child and substitutes it back into the command line. Vite reads `PORT`
+natively; the gated CLI accepts `--http-port`, so `just dev` passes the literal
+`NSL_PORT` placeholder and nsl rewrites it at spawn time. Nothing is bound to
+a hard-coded port.
+
 `config.yaml` ships with `http.tls: false` for dev so nsl can plain-HTTP
-proxy to the gateway. Production should use `tls: true`.
+proxy to the gateway. Production should use `tls: true`. The `http.listen`
+port in config is irrelevant under `just dev` because `--http-port` overrides
+it.
 
 ```bash
 just bun install      # pulls @nsio/nsl + concurrently on first run

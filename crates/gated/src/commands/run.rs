@@ -126,7 +126,11 @@ async fn run_observability_server(
         .context("observability HTTP server")
 }
 
-pub(crate) async fn command(params: &GlobalParams, enable_admin_token: bool) -> Result<()> {
+pub(crate) async fn command(
+    params: &GlobalParams,
+    enable_admin_token: bool,
+    http_port: Option<u16>,
+) -> Result<()> {
     let version = gated_version();
     info!(%version, "Gated");
 
@@ -137,13 +141,24 @@ pub(crate) async fn command(params: &GlobalParams, enable_admin_token: bool) -> 
         })
     });
 
-    let config = match load_config(params, true) {
+    let mut config = match load_config(params, true) {
         Ok(config) => config,
         Err(error) => {
             error!(?error, "Failed to load config file");
             std::process::exit(1);
         }
     };
+
+    if let Some(port) = http_port {
+        let mut addr = config.store.http.listen.address();
+        addr.set_port(port);
+        info!(
+            "Overriding HTTP listen port from CLI: {} -> {}",
+            config.store.http.listen.port(),
+            port
+        );
+        config.store.http.listen = addr.into();
+    }
 
     // `metrics` macros are no-ops until a recorder is installed, so the
     // emission sites don't care whether this succeeds. If the user

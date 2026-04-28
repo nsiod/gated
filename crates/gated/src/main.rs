@@ -98,6 +98,11 @@ pub(crate) enum Commands {
         /// Enable an API token (passed via the `GATED_ADMIN_TOKEN` env var) that automatically maps to the first admin user
         #[clap(long, action=ArgAction::SetTrue)]
         enable_admin_token: bool,
+        /// Override the HTTP listen port from the config file. Bind address
+        /// (`http.listen` IP) is preserved; only the port changes. Pass the
+        /// literal `NSL_PORT` when launching via `nsl run`.
+        #[clap(long)]
+        http_port: Option<u16>,
     },
     /// Perform basic config checks
     Check,
@@ -157,9 +162,10 @@ async fn _main() -> Result<()> {
             println!("gated {}", gated_version());
             Ok(())
         }
-        Commands::Run { enable_admin_token } => {
-            crate::commands::run::command(&params, *enable_admin_token).await
-        }
+        Commands::Run {
+            enable_admin_token,
+            http_port,
+        } => crate::commands::run::command(&params, *enable_admin_token, *http_port).await,
         Commands::Check => crate::commands::check::command(&params).await,
         Commands::CreateUser {
             username,

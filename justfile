@@ -47,12 +47,12 @@ dev:
         --kill-others \
         --names "backend,frontend" \
         --prefix-colors "blue,magenta" \
-        "{{web_dir}}/node_modules/.bin/nsl run -f -n gated:/ -- env CARGO_BUILD_TARGET={{cargo_target}} cargo run --target {{cargo_target}} --all-features -- --config {{config_path}} run --http-port NSL_PORT" \
+        "{{web_dir}}/node_modules/.bin/nsl run -f -n gated -- env CARGO_BUILD_TARGET={{cargo_target}} cargo run --target {{cargo_target}} --all-features -- --config {{config_path}} run --http-port NSL_PORT" \
         "cd {{web_dir}} && ./node_modules/.bin/nsl run -f -n gated:/ui -- ./node_modules/.bin/vite"
 
-# Manually register an already-running backend with nsl at gated:/.
+# Manually register an already-running backend with nsl as `gated`.
 nsl-route-backend port="8890":
-    cd {{web_dir}} && bunx nsl route gated:/ {{port}}
+    cd {{web_dir}} && bunx nsl route gated {{port}}
 
 # List nsl's active route table.
 nsl-status:

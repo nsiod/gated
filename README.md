@@ -34,14 +34,20 @@ cargo build --features mysql,postgres
 
 Dev uses [`@nsio/nsl`](https://www.npmjs.com/package/@nsio/nsl) as a local
 reverse proxy so that Vite (frontend) and the Rust gateway (backend) share a
-single origin — `http://gated.localhost:3355` — exactly like production. No
-CORS workarounds, no `server.proxy`, cookies behave the way they will in prod.
+single origin — `http://gated.localhost:<NSL_PORT>` — exactly like production.
+No CORS workarounds, no `server.proxy`, cookies behave the way they will in
+prod.
 
 ```text
-http://gated.localhost:3355/ui      → Vite (HMR, port allocated by nsl)
-http://gated.localhost:3355/api     → Rust gateway /api
-http://gated.localhost:3355/admin/api → Rust gateway /admin/api
+http://gated.localhost:<port>/ui        → Vite (HMR, port allocated by nsl)
+http://gated.localhost:<port>/api       → Rust gateway /api
+http://gated.localhost:<port>/admin/api → Rust gateway /admin/api
 ```
+
+`<port>` is whatever `nsl status` reports under `proxy.listen` — `:3355` on a
+fresh nsl install, but a shared dev box may have its daemon configured on a
+different port (`:1355`, etc.). `just dev`'s startup banner prints the real
+URLs.
 
 `config.yaml` ships with `http.tls: false` for dev so nsl can plain-HTTP
 proxy to the gateway. Production should use `tls: true`.
@@ -49,11 +55,8 @@ proxy to the gateway. Production should use `tls: true`.
 ```bash
 just bun install      # pulls @nsio/nsl + concurrently on first run
 just dev              # backend + frontend, Ctrl-C tears down both
+just nsl-status       # daemon state and route table
 ```
-
-Then open `http://gated.localhost:3355/ui/`. `just nsl-status` shows the live
-route table; if the daemon is not running, the first `bunx nsl ...` invocation
-starts it.
 
 If the dev environment cannot run nsl at all, fall back to `just bun run
 dev:bare` (frontend only, Vite default port) and run the gateway with

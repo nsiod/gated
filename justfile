@@ -38,7 +38,7 @@ typecheck:
 test-web *ARGS:
     cd {{web_dir}} && CARGO_BUILD_TARGET={{cargo_target}} bun run test {{ARGS}}
 
-# Run backend + Vite together under nsl at http://gated.localhost:3355/ui/.
+# Run backend + Vite together; nsl banners the actual gated.localhost URL.
 dev port="8890":
     cd {{web_dir}} && bunx nsl route gated:/ {{port}}
     cd {{web_dir}} && bunx concurrently \
